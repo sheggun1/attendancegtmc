@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GTMC Attendance Portal</title>
+<script>try{var t=localStorage.getItem("att_theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f3f5fb;--card:#fff;--ink:#0f2547;--text:#1e293b;--muted:#64748b;--faint:#b4bfd0;--line:#e5e9f2;--thead:#f0f3fa;--soft:#f6f8fc;--brand:#2563eb;--ok:#059669;--bad:#dc2626;--warn:#d97706;--warnbg:#fff7ed;--sh:0 1px 2px rgba(15,37,71,.05),0 10px 28px rgba(15,37,71,.07);color-scheme:light}
+[data-theme=dark]{--bg:#0a1120;--card:#121b2e;--ink:#e8eefb;--text:#cbd5e6;--muted:#8d9cb6;--faint:#41506b;--line:#223049;--thead:#192540;--soft:#16213a;--brand:#4f8cff;--ok:#34d399;--bad:#f87171;--warn:#fbbf24;--warnbg:#2b2314;--sh:0 1px 2px #0006,0 10px 28px #0005;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.in{max-width:1320px;margin:0 auto;padding:0 20px}.hidden,.sr{display:none!important}
+.top{background:linear-gradient(120deg,#0a1e3d,#173f7a 60%,#2563eb 140%);color:#fff;padding:16px 0}
+.top .in{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:13px;background:#fff;color:#0f2c56;font:800 25px Georgia,serif;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px #0004}
+.brand h1{margin:0;font-size:19px;letter-spacing:.3px}.brand p{margin:0;font-size:10.5px;letter-spacing:1.8px;text-transform:uppercase;color:#a9c8ff;font-weight:600}
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.user-chip{padding:6px 13px;border-radius:99px;font-size:12px;font-weight:600;background:#ffffff1f;border:1px solid #ffffff33}.user-chip.admin{background:#fbbf2433;border-color:#fbbf2480}
+.btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:9px 15px;font:600 13px inherit;font-family:inherit;color:#fff;background:var(--brand);cursor:pointer;transition:.15s}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}.btn:active{transform:none}
+.btn.ghost{background:#ffffff1c;border:1px solid #ffffff38}.btn.ico{padding:9px 12px}
+.btn.gray{background:var(--card);color:var(--text);border:1px solid var(--line)}.btn.danger{background:var(--bad);color:#fff}.btn.ok{background:var(--ok);color:#fff}.btn.green{background:#16a34a;color:#fff}
+.bar{background:var(--card);border-bottom:1px solid var(--line);box-shadow:var(--sh);position:sticky;top:0;z-index:40}
+.bar .in{display:flex;gap:12px;align-items:center;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+.mnav{display:flex;gap:6px}.mnav input{width:160px;font-weight:700}.search{width:200px}
+.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:260px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:transparent;color:var(--muted);padding:8px 13px;border-radius:99px;font:600 13px inherit;font-family:inherit;white-space:nowrap;cursor:pointer}.tab:hover{background:var(--soft)}.tab.on{background:var(--brand);color:#fff}
+.wrap{max-width:1320px;margin:22px auto;padding:0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--sh)}
+.vh{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}
+h2{margin:0 0 3px;font-size:18px;font-weight:800;color:var(--ink)}h3{margin:0 0 8px;font-size:14px;font-weight:700;color:var(--ink)}.subtitle,.settings-hint{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+label{display:block;font-size:11px;font-weight:700;margin:10px 0 5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+input,select{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font:14px inherit;font-family:inherit;width:100%;background:var(--card);color:var(--text)}input:focus,select:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px #2563eb26}
+input[type=checkbox]{width:auto}.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.ctx{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px}.ctx>div{min-width:240px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--sh)}.kpi span{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700}.kpi b{display:block;font-size:26px;color:var(--ink);line-height:1.2}
+.table-wrap{overflow:auto;border-radius:12px;border:1px solid var(--line);max-height:75vh}table{border-collapse:collapse;width:100%;font-size:13px;background:var(--card)}
+th,td{border-bottom:1px solid var(--line);padding:9px 11px;text-align:left}th{background:var(--thead);font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink);position:sticky;top:0;z-index:3;white-space:nowrap}th[data-k]{cursor:pointer}tbody tr:hover td{background:var(--soft)}tfoot td{font-weight:800;background:var(--thead);position:sticky;bottom:0}tr.clk{cursor:pointer}
+.time-cell{font:12.5px ui-monospace,Menlo,Consolas,monospace}.ok{color:var(--ok);font-weight:700}.late{color:var(--bad);font-weight:700}.miss{color:var(--warn);font-weight:700}.absent{color:var(--muted);font-style:italic}
+.btn.ok,.btn.late{color:#fff}.chip{display:inline-block;background:var(--thead);color:var(--muted);padding:1px 8px;border-radius:99px;font-size:10.5px;margin-left:6px;font-weight:700}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0}.stat{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--brand);padding:13px 15px;border-radius:12px}.stat .n{font-size:22px;font-weight:800;color:var(--ink)}.stat .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-top:2px}
+.stat.late{border-left-color:var(--bad)}.stat.late .n{color:var(--bad)}.stat.miss{border-left-color:var(--warn)}.stat.miss .n{color:var(--warn)}.stat.abs{border-left-color:var(--muted)}.stat.ok{border-left-color:var(--ok)}.stat.ok .n{color:var(--ok)}
+.range{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}.presets{display:flex;gap:6px;flex-wrap:wrap}.rg{display:flex;gap:10px;align-items:flex-end}.rg input{width:155px}
+.chip-btn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:99px;padding:6px 13px;font:600 12px inherit;font-family:inherit;cursor:pointer}.chip-btn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.rate{display:flex;align-items:center;gap:8px;min-width:110px}.rate i{display:block;height:7px;border-radius:9px;background:var(--ok)}.rate i.m{background:var(--warn)}.rate i.l{background:var(--bad)}.rate u{flex:1;height:7px;border-radius:9px;background:var(--line);text-decoration:none;overflow:hidden}.rate b{font-size:12px;width:36px;text-align:right}
+.atabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px;border-bottom:1px solid var(--line);padding-bottom:10px}.atab{border:0;background:var(--soft);color:var(--muted);padding:8px 14px;border-radius:10px;font:600 13px inherit;font-family:inherit;cursor:pointer}.atab.on{background:var(--brand);color:#fff}
+.settings-box{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:16px 18px}.drop{display:block;border:2px dashed var(--faint);border-radius:14px;padding:26px;text-align:center;cursor:pointer;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0;font-size:13.5px;margin:0}.drop.over,.drop:hover{border-color:var(--brand);background:#2563eb12}.drop input{display:none}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{font-size:12.5px;color:var(--muted)}.hide-toggle{cursor:pointer;font:600 12px inherit;background:none;border:0;padding:4px 10px;border-radius:6px}
+.empty{text-align:center;color:var(--muted);padding:48px 20px}.warn{background:var(--warnbg);border-left:4px solid var(--warn);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:var(--text)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px}@keyframes sp{to{transform:rotate(360deg)}}
+.modal-bg{position:fixed;inset:0;background:#0a1e3da6;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100}.modal{background:var(--card);padding:28px;border-radius:20px;width:380px;max-width:92vw;box-shadow:0 20px 60px #0006;animation:pop .2s}@keyframes pop{from{transform:scale(.95);opacity:0}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#0f2547;color:#fff;padding:11px 18px;border-radius:12px;box-shadow:0 10px 30px #0006;z-index:200;font-weight:600;max-width:90vw;transition:.3s}.toast.out{opacity:0;transform:translate(-50%,10px)}
+.rank-list{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}.rank-col{border:1px solid var(--line);border-radius:14px;overflow:hidden}.rank-col h4{margin:0;padding:13px 18px;background:var(--thead);color:var(--ink);font-size:14px}
+.rank-item{display:flex;align-items:center;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}.rank-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}.rank-num.gold{background:#f5b301}.rank-num.silver{background:#94a3b8}.rank-num.bronze{background:#c9742a}.rank-num.default{background:var(--thead);color:var(--muted)}
+.rank-info{flex:1}.rank-name{font-weight:700;color:var(--ink)}.rank-sub{font-size:11.5px;color:var(--muted)}.rank-value{font-weight:800;font-size:15px}
+.pattern-card{border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:var(--soft)}.pattern-card.sev-high{border-left-color:var(--bad)}.pattern-card.sev-med{border-left-color:var(--warn)}
+.pattern-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:4px}.pattern-name{font-weight:800;color:var(--ink)}.pattern-badge{font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;text-transform:uppercase}.pattern-badge.sev-high{background:#dc262622;color:var(--bad)}.pattern-badge.sev-med{background:#d9770622;color:var(--warn)}.pattern-detail{font:12px ui-monospace,Menlo,monospace;color:var(--muted);margin-top:5px}
+footer{margin-top:36px;padding:26px;background:linear-gradient(120deg,#0a1e3d,#173f7a);color:#a9c8ff;text-align:center;font-size:12.5px}footer strong{color:#fff}
+@media(max-width:760px){.rank-list{grid-template-columns:1fr}.bar{position:static}.in,.wrap{padding:0 14px}.card{padding:16px}.mnav{width:100%}.mnav input{flex:1;width:auto}.search{width:100%}th,td{padding:7px 8px;font-size:12px}.rg{width:100%}.rg>div{flex:1}.rg input{width:100%}}
+@media print{.top,.bar,.kpis,#adminCard,footer,.noprint,.toast,.ctx{display:none!important}body{background:#fff;color:#000}.card{box-shadow:none;border:0;padding:0}.table-wrap{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+ <div class="brand"><div class="logo">G</div><div><h1>GTMC</h1><p>Attendance Portal</p></div></div>
+ <div class="acts">
+  <button class="btn ghost ico" onclick="toggleTheme()" title="Dark / light mode">🌓</button>
+  <div class="user-chip" id="userChip"><span id="whoami">Public View</span></div>
+  <button class="btn ghost" id="loginBtn" onclick="openLogin()">🔐 Admin Login</button>
+  <button class="btn ghost hidden" id="logoutBtn" onclick="logout()">Logout</button>
+  <button class="btn ghost ico" onclick="reloadData()" title="Refresh data">🔄</button>
+ </div></div></header>
+<div class="bar"><div class="in">
+ <div class="mnav"><button class="btn gray ico" onclick="stepMonth(-1)" title="Previous month">‹</button><input type="month" id="monthPick" onchange="monthChanged()"><button class="btn gray ico" onclick="stepMonth(1)" title="Next month">›</button></div>
+ <input id="q" class="search" type="search" placeholder="🔍 Search staff…  ( / )" oninput="applySearch()">
+ <div class="tabs" id="tabs"></div>
+ <div class="sr"><select id="viewMode" onchange="renderAll()">
+  <option value="grid">📅 Monthly Grid</option><option value="summary">📊 Summary</option><option value="person">👤 Individual</option><option value="absent">❌ Absent</option><option value="late">⏰ Late</option>
+  <option value="week" class="admin-only">🗓 Week</option><option value="leaderboard" class="admin-only">🏆 Leaderboard</option><option value="patterns" class="admin-only">📈 Patterns</option><option value="missout" class="admin-only">🚪 Missing Out</option><option value="early" class="admin-only">🏃 Early Out</option>
+ </select></div>
+</div></div>
+
+<main class="wrap">
+ <section class="card hidden" id="adminCard">
+  <h2>🔐 Admin Console</h2><p class="subtitle">Manage attendance data, work conditions and visibility</p>
+  <div class="atabs"><button class="atab on" data-a="data" onclick="adminTab('data')">📂 Data</button><button class="atab" data-a="rules" onclick="adminTab('rules')">⚙️ Work Rules</button><button class="atab" data-a="half" onclick="adminTab('half')">⏰ Half-Day</button><button class="atab" data-a="period" onclick="adminTab('period')">📅 Start Dates</button><button class="atab" data-a="staff" onclick="adminTab('staff')">🙈 Staff</button></div>
+  <div class="apane" id="ap-data">
+   <label class="drop" id="drop"><input type="file" id="fileInput" accept=".txt,.xls,.xlsx"><span id="fileName">Drop 001_GLog.txt here or click to browse</span></label>
+   <div class="btns" style="margin-top:14px"><button class="btn" id="uploadBtn" onclick="uploadFile('replace')">📥 Upload (Replace)</button><button class="btn" onclick="uploadFile('merge')">➕ Upload (Merge)</button><button class="btn danger" onclick="clearAllData()">🗑 Clear Server Data</button><span class="status" id="status"></span></div>
+   <h3 style="margin-top:22px">📊 Data Summary</h3><div id="dataSummary" class="status">No data.</div>
+   <button class="btn gray" onclick="exportCSV()" style="margin-top:12px">⬇ Export Summary CSV</button>
+  </div>
+  <div class="apane hidden" id="ap-rules"><div class="settings-box"><h3>⚙️ Work Conditions</h3><p class="settings-hint">Applies instantly to everyone</p>
+   <div class="row"><div><label>Work Start</label><input type="time" id="startTime" value="08:00"></div><div><label>Work End</label><input type="time" id="endTime" value="15:30"></div><div><label>Grace Period (min)</label><input type="number" id="grace" min="0" max="120" value="10"></div>
+   <div><label>Working Days</label><select id="workDays"><option value="1,2,3,4,5">Monday – Friday</option><option value="1,2,3,4,5,6">Monday – Saturday</option><option value="1,2,3,4,5,6,0">All days</option></select></div></div>
+   <div class="btns" style="margin-top:14px"><button class="btn ok" onclick="saveSettings()">💾 Save Settings</button><button class="btn gray" onclick="resetSettingsForm()">↺ Reset Form</button><span class="status" id="settingsStatus"></span></div></div></div>
+  <div class="apane hidden" id="ap-half"><div class="settings-box" style="background:var(--warnbg)"><h3>⏰ Half-Day Rules (per employee)</h3><p class="settings-hint">For selected employees only: clock-in after cutoff or clock-out before cutoff = Absent.</p>
+   <div class="row"><div><label>Rules Enabled</label><select id="hdEnabled"><option value="yes">Yes — apply half-day rules</option><option value="no">No — use normal rules</option></select></div><div><label>Cutoff Time</label><input type="time" id="hdCutoff" value="12:00"></div></div>
+   <div class="btns" style="margin-top:12px"><button class="btn ok" onclick="saveHalfDaySettings()">💾 Save Global Settings</button><span class="status" id="hdStatus"></span></div>
+   <label style="margin-top:18px">Apply to specific employees</label><div id="halfDayList" style="max-height:320px;overflow:auto"><em>Loading…</em></div></div></div>
+  <div class="apane hidden" id="ap-period"><div class="settings-box"><h3>📅 School Start Date per Month</h3><p class="settings-hint">Set the day counting begins each month. Days before this are ignored.</p>
+   <div class="row"><div><label>Month</label><input type="month" id="periodMonth"></div><div><label>Start Date</label><input type="date" id="periodStart"></div></div>
+   <div class="btns" style="margin-top:12px"><button class="btn ok" onclick="savePeriod()">💾 Save Period</button><span class="status" id="periodStatus"></span></div><div id="periodList" style="margin-top:14px">No custom periods set.</div></div></div>
+  <div class="apane hidden" id="ap-staff"><h3>🙈 Hidden Employees</h3><div id="hiddenList" style="max-width:520px">None hidden.</div></div>
+ </section>
+
+ <div id="emptyWarn" class="warn hidden">⚠ No attendance data has been uploaded yet. Please contact the administrator.</div>
+ <div class="kpis" id="kpis"></div>
+ <div class="ctx hidden" id="ctxRow">
+  <div id="personPickWrap" class="hidden"><label>Employee</label><select id="empSelect" onchange="renderPerson()"></select></div>
+  <div id="weekPickWrap" class="hidden"><label>Week Start (Monday)</label><input type="date" id="weekStart" onchange="renderWeek()"></div>
+ </div>
+
+ <div class="card" id="viewGrid"><div class="vh"><div><h2 id="gridTitle">📅 Monthly Attendance Grid</h2><p class="subtitle" id="conditionsHint"></p></div></div>
+  <div class="legend"><span><b class="late">Red</b> late in</span><span><b class="miss">Amber</b> early out / missing</span><span>— no record</span><span>Top = in · bottom = out</span></div><div id="gridResult"><div class="empty">Loading…</div></div></div>
+
+ <div class="card hidden" id="viewSummary"><div class="vh"><div><h2>📊 Attendance Summary</h2><p class="subtitle" id="sumSub"></p></div>
+  <div class="btns noprint"><button class="btn gray" onclick="exportCSV()">⬇ CSV</button><button class="btn gray" onclick="exportXLSX()">📗 Excel</button><button class="btn gray" onclick="window.print()">🖨 Print</button></div></div>
+  <div class="range noprint"><div><label style="margin-top:0">Quick range</label><div class="presets" id="presets"></div></div>
+   <div class="rg"><div><label style="margin-top:0">From</label><input type="date" id="sumFrom" onchange="rangeChanged()"></div><div><label style="margin-top:0">To</label><input type="date" id="sumTo" onchange="rangeChanged()"></div></div></div>
+  <div id="summaryResult"></div></div>
+
+ <div class="card hidden" id="viewPerson"><div class="vh"><h2>👤 Individual Record</h2><div class="btns" id="personActions"></div></div><div id="personResult"></div></div>
+ <div class="card hidden" id="viewAbsent"><div class="vh"><div><h2>❌ Absent Report</h2><p class="subtitle" id="absentSubtitle"></p></div></div><div id="absentActions"></div><div id="absentResult"></div></div>
+ <div class="card hidden" id="viewLate"><div class="vh"><div><h2>⏰ Late Arrival Report</h2><p class="subtitle" id="lateSubtitle"></p></div></div><div id="lateActions"></div><div id="lateResult"></div></div>
+ <div class="card hidden" id="viewWeek"><div class="vh"><div><h2 id="weekTitle">🗓 Week View</h2><p class="subtitle" id="weekSubtitle"></p></div><div class="btns"><button class="btn gray" onclick="shiftWeek(-1)">◀ Previous</button><button class="btn" onclick="shiftWeek(0)">Current Week</button><button class="btn gray" onclick="shiftWeek(1)">Next ▶</button></div></div><div id="weekResult"></div></div>
+ <div class="card hidden" id="viewLeaderboard"><div class="vh"><div><h2>🏆 Punctuality Leaderboard</h2><p class="subtitle" id="leaderboardSubtitle"></p></div></div><div id="leaderboardResult"></div></div>
+ <div class="card hidden" id="viewPatterns"><div class="vh"><div><h2>📈 Absence &amp; Late Patterns</h2><p class="subtitle" id="patternsSubtitle"></p></div></div><div id="patternsResult"></div></div>
+ <div class="card hidden" id="viewMissout"><div class="vh"><div><h2>🚪 Missing Clock-Out Report</h2><p class="subtitle" id="missoutSubtitle"></p></div></div><div id="missoutActions"></div><div id="missoutResult"></div></div>
+ <div class="card hidden" id="viewEarly"><div class="vh"><div><h2>🏃 Early Clock-Out Report</h2><p class="subtitle" id="earlySubtitle"></p></div></div><div id="earlyActions"></div><div id="earlyResult"></div></div>
+</main>
+<footer><div>© <span id="year"></span> <strong>GTMC Attendance Portal</strong> · Crafted by <strong>Veehicee</strong></div></footer>
+<div class="modal-bg hidden" id="loginModal" onclick="if(event.target===this)closeLogin()"><div class="modal" role="dialog" aria-label="Admin login">
+ <h3>🔐 Admin Login</h3><p class="subtitle">Enter your password</p><label>Password</label><input type="password" id="pwdInput" onkeydown="if(event.key==='Enter')doLogin()">
+ <div class="btns" style="margin-top:18px;justify-content:flex-end"><button class="btn gray" onclick="closeLogin()">Cancel</button><button class="btn" onclick="doLogin()">Login</button></div>
+ <p id="loginErr" style="color:var(--bad);font-size:12.5px;margin:12px 0 0;font-weight:600"></p></div></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbw99UDCSuQj4S0TLDycAmV3JBnwtFsjY5YBYlbbQiumOBkzrMRo5P7Z68apHnTH6K-U/exec';
+document.getElementById('year').textContent = new Date().getFullYear();
+
+var RECORDS  = [];
+var HIDDEN   = new Set();
+var PERIODS  = {};
+var HALFDAY  = new Set();
+var SETTINGS = { start: 480, end: 930, grace: 10, workDays: '1,2,3,4,5', halfdayEnabled: 'yes', halfdayCutoff: 720, halfdayInAfter: 'yes', halfdayOutBefore: 'yes' };
+var IS_ADMIN = false;
+var SESSION_TOKEN = sessionStorage.getItem('att_token') || '';
+
+window.addEventListener('DOMContentLoaded', async function() {
+  if (SESSION_TOKEN) {
+    var ok = await validateSession();
+    if (ok) IS_ADMIN = true;
+    else { SESSION_TOKEN=''; sessionStorage.removeItem('att_token'); }
+  }
+  await reloadData();
+  var dates = RECORDS.map(function(r){return r.date;}).sort();
+  var def = dates.length ? dates[dates.length-1].slice(0,7) : new Date().toISOString().slice(0,7);
+  document.getElementById('monthPick').value = def;
+  document.getElementById('weekStart').value = thisMonday();
+  document.getElementById('periodMonth').value = def;
+  refreshUI(); renderAll();
+});
+
+async function api(action, payload) {
+  payload = payload || {};
+  var body = Object.assign({ action: action }, payload);
+  if (SESSION_TOKEN) body.token = SESSION_TOKEN;
+  var res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(body) });
+  var text = await res.text();
+  var data;
+  try { data = JSON.parse(text); }
+  catch(e) { console.error('Non-JSON:', text.slice(0,500)); throw new Error('Server error.'); }
+  if (!data.ok && data.error && /session/i.test(data.error)) {
+    IS_ADMIN = false; SESSION_TOKEN = '';
+    sessionStorage.removeItem('att_token'); refreshUI();
+  }
+  return data;
+}
+
+async function validateSession(){
+  try { var res = await api('setSettings', { settings: SETTINGS }); return res.ok; }
+  catch(e) { return false; }
+}
+
+async function reloadData(){
+  try {
+    document.getElementById('gridResult').innerHTML = '<div class="empty"><span class="spinner"></span> Loading…</div>';
+    var data = await api('getPublicData');
+    if (!data.ok) throw new Error(data.error || 'Failed');
+    RECORDS = data.records || [];
+    HIDDEN  = new Set((data.hidden || []).map(String));
+    PERIODS = data.periods || {};
+    HALFDAY = new Set((data.halfDayList || []).map(String));
+    if (data.settings){
+      SETTINGS = {
+        start:            Number(data.settings.start) || 480,
+        end:              Number(data.settings.end) || 930,
+        grace:            Number(data.settings.grace) || 0,
+        workDays:         String(data.settings.workDays || '1,2,3,4,5'),
+        halfdayEnabled:   String(data.settings.halfdayEnabled || 'yes'),
+        halfdayCutoff:    Number(data.settings.halfdayCutoff) || 720,
+        halfdayInAfter:   String(data.settings.halfdayInAfter || 'yes'),
+        halfdayOutBefore: String(data.settings.halfdayOutBefore || 'yes')
+      };
+      fillSettingsForm();
+      fillHalfDayForm();
+    }
+    refreshUI(); renderAll();
+  } catch (err){
+    document.getElementById('gridResult').innerHTML = '<div class="empty" style="color:var(--bad)">Error: ' + err.message + '</div>';
+  }
+}
+
+function fillSettingsForm(){
+  document.getElementById('startTime').value = minToHHMM(SETTINGS.start);
+  document.getElementById('endTime').value   = minToHHMM(SETTINGS.end);
+  document.getElementById('grace').value     = SETTINGS.grace;
+  document.getElementById('workDays').value  = SETTINGS.workDays || '1,2,3,4,5';
+}
+function resetSettingsForm(){ fillSettingsForm(); }
+
+function fillHalfDayForm(){
+  var en = document.getElementById('hdEnabled');
+  if (en) en.value = SETTINGS.halfdayEnabled || 'yes';
+  var c = document.getElementById('hdCutoff');
+  if (c) c.value = minToHHMM(SETTINGS.halfdayCutoff || 720);
+}
+
+async function saveSettings(){
+  var status = document.getElementById('settingsStatus');
+  var newSettings = {
+    start: hhmmToMin(document.getElementById('startTime').value || '08:00'),
+    end: hhmmToMin(document.getElementById('endTime').value || '15:30'),
+    grace: +document.getElementById('grace').value || 0,
+    workDays: document.getElementById('workDays').value,
+    halfdayEnabled: SETTINGS.halfdayEnabled,
+    halfdayCutoff: SETTINGS.halfdayCutoff,
+    halfdayInAfter: SETTINGS.halfdayInAfter,
+    halfdayOutBefore: SETTINGS.halfdayOutBefore
+  };
+  status.innerHTML = '<span class="spinner"></span> Saving…';
+  try {
+    var res = await api('setSettings', { settings: newSettings });
+    if (!res.ok) throw new Error(res.error || 'Save failed');
+    SETTINGS = newSettings;
+    status.textContent = '✔ Saved';
+    renderConditionsHint(); renderAll();
+    setTimeout(function(){ status.textContent=''; }, 3000);
+  } catch (err){ status.textContent = ''; alert('Save error: ' + err.message); }
+}
+
+async function saveHalfDaySettings(){
+  var status = document.getElementById('hdStatus');
+  var newSettings = {
+    start: SETTINGS.start,
+    end: SETTINGS.end,
+    grace: SETTINGS.grace,
+    workDays: SETTINGS.workDays,
+    halfdayEnabled: document.getElementById('hdEnabled').value,
+    halfdayCutoff: hhmmToMin(document.getElementById('hdCutoff').value || '12:00'),
+    halfdayInAfter: SETTINGS.halfdayInAfter,
+    halfdayOutBefore: SETTINGS.halfdayOutBefore
+  };
+  status.innerHTML = '<span class="spinner"></span> Saving…';
+  try {
+    var res = await api('setSettings', { settings: newSettings });
+    if (!res.ok) throw new Error(res.error || 'Save failed');
+    SETTINGS = newSettings;
+    status.textContent = '✔ Saved';
+    renderAll();
+    setTimeout(function(){ status.textContent=''; }, 3000);
+  } catch (err){ status.textContent = ''; alert('Error: ' + err.message); }
+}
+
+function openLogin(){
+  document.getElementById('loginModal').classList.remove('hidden');
+  document.getElementById('pwdInput').value='';
+  document.getElementById('loginErr').textContent='';
+  setTimeout(function(){ document.getElementById('pwdInput').focus(); },50);
+}
+function closeLogin(){ document.getElementById('loginModal').classList.add('hidden'); }
+
+async function doLogin(){
+  var pwd = document.getElementById('pwdInput').value;
+  if (!pwd) return;
+  var errEl = document.getElementById('loginErr');
+  errEl.textContent = 'Checking…';
+  try {
+    var res = await api('login', { password: pwd });
+    if (res.ok && res.token){
+      SESSION_TOKEN = res.token;
+      sessionStorage.setItem('att_token', SESSION_TOKEN);
+      IS_ADMIN = true; closeLogin(); refreshUI(); renderAll();
+    } else errEl.textContent = '❌ ' + (res.error || 'Wrong password');
+  } catch (err){ errEl.textContent = '⚠️ ' + err.message; }
+}
+
+async function logout(){
+  try { await api('logout'); } catch(e){}
+  SESSION_TOKEN = ''; IS_ADMIN = false;
+  sessionStorage.removeItem('att_token');
+  refreshUI(); renderAll();
+}
+
+function refreshUI(){
+  document.getElementById('adminCard').classList.toggle('hidden', !IS_ADMIN);
+  document.getElementById('loginBtn').classList.toggle('hidden', IS_ADMIN);
+  document.getElementById('logoutBtn').classList.toggle('hidden', !IS_ADMIN);
+  document.getElementById('whoami').textContent = IS_ADMIN ? 'Admin Mode' : 'Public View';
+  document.getElementById('userChip').classList.toggle('admin', IS_ADMIN);
+  document.getElementById('emptyWarn').classList.toggle('hidden', RECORDS.length > 0);
+  renderHiddenList(); renderDataSummary(); renderConditionsHint(); renderPeriodList(); renderHalfDayList();
+  document.querySelectorAll('.admin-only').forEach(function(o) {
+    o.disabled = !IS_ADMIN;
+    o.style.display = IS_ADMIN ? '' : 'none';
+  });
+  if (!IS_ADMIN){
+    var sel = document.getElementById('viewMode');
+    if (['week','leaderboard','patterns','missout','early'].indexOf(sel.value) !== -1) sel.value = 'grid';
+  }
+}
+
+function renderConditionsHint(){
+  var daysMap = {'1,2,3,4,5':'Mon–Fri','1,2,3,4,5,6':'Mon–Sat','1,2,3,4,5,6,0':'Every day'};
+  document.getElementById('conditionsHint').textContent =
+    'Work hours: ' + minToHHMM(SETTINGS.start) + ' – ' + minToHHMM(SETTINGS.end) + ' · Grace: ' + SETTINGS.grace + ' min · Working days: ' + (daysMap[SETTINGS.workDays] || SETTINGS.workDays);
+}
+
+async function uploadFile(mode){
+  var file = document.getElementById('fileInput').files[0];
+  if (!file){ alert('Select a file first.'); return; }
+  var status = document.getElementById('status');
+  status.innerHTML = '<span class="spinner"></span> Parsing…';
+  try {
+    var isTxt = /\.txt$/i.test(file.name);
+    var text = await readFile(file, isTxt);
+    var newRecs = isTxt ? parseTxt(text) : parseXls(text);
+    if (!newRecs.length){ alert('No valid records found.'); status.textContent=''; return; }
+    var newSettings = {
+      start: hhmmToMin(document.getElementById('startTime').value || '08:00'),
+      end: hhmmToMin(document.getElementById('endTime').value || '15:30'),
+      grace: +document.getElementById('grace').value || 0,
+      workDays: document.getElementById('workDays').value,
+      halfdayEnabled: SETTINGS.halfdayEnabled,
+      halfdayCutoff: SETTINGS.halfdayCutoff,
+      halfdayInAfter: SETTINGS.halfdayInAfter,
+      halfdayOutBefore: SETTINGS.halfdayOutBefore
+    };
+    status.innerHTML = '<span class="spinner"></span> Uploading…';
+    var res = await api('upload', { records: newRecs, mode: mode, settings: newSettings });
+    if (!res.ok) throw new Error(res.error || 'Upload failed');
+    status.textContent = '✔ ' + (mode==='replace'?'Replaced':'Merged') + ': ' + res.added + ' punches (total ' + res.total + ')';
+    SETTINGS = newSettings; await reloadData();
+  } catch (err){
+    status.textContent = ''; alert('Upload error: ' + err.message); console.error(err);
+  }
+}
+
+function readFile(file, isTxt){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(e){ resolve(e.target.result); };
+    r.onerror = reject;
+    if (isTxt) r.readAsText(file, 'utf-8');
+    else r.readAsBinaryString(file);
+  });
+}
+
+async function clearAllData(){
+  if (!confirm('Delete ALL data? Cannot be undone.')) return;
+  var res = await api('clearAll');
+  if (res.ok){ await reloadData(); document.getElementById('status').textContent = '🗑 Cleared'; }
+}
+
+async function toggleHide(id){
+  var hide = !HIDDEN.has(String(id));
+  var res = await api('setHidden', { id: id, hidden: hide });
+  if (res.ok){
+    if (hide) HIDDEN.add(String(id)); else HIDDEN.delete(String(id));
+    renderHiddenList(); renderAll();
+  }
+}
+
+async function toggleHalfDay(id){
+  var enabled = !HALFDAY.has(String(id));
+  var res = await api('setHalfDay', { id: id, enabled: enabled });
+  if (res.ok){
+    if (enabled) HALFDAY.add(String(id)); else HALFDAY.delete(String(id));
+    renderHalfDayList(); renderAll();
+  }
+}
+
+async function savePeriod(){
+  var month = document.getElementById('periodMonth').value;
+  var startDate = document.getElementById('periodStart').value;
+  var status = document.getElementById('periodStatus');
+  if (!month || !startDate){ status.textContent = '⚠️ Pick a month and date'; return; }
+  status.innerHTML = '<span class="spinner"></span> Saving…';
+  try {
+    var res = await api('setPeriod', { month: month, startDate: startDate });
+    if (!res.ok) throw new Error(res.error || 'Save failed');
+    PERIODS[month] = startDate;
+    status.textContent = '✔ Saved';
+    renderPeriodList();
+    renderAll();
+    setTimeout(function(){ status.textContent=''; }, 3000);
+  } catch (err){ status.textContent = ''; alert('Error: ' + err.message); }
+}
+
+async function removePeriod(month){
+  if (!confirm('Remove custom start date for ' + month + '?')) return;
+  var res = await api('deletePeriod', { month: month });
+  if (res.ok){
+    delete PERIODS[month];
+    renderPeriodList();
+    renderAll();
+  }
+}
+
+function parseTxt(text){
+  var out = [];
+  var lines = text.split(/\r?\n/);
+  for (var i = 0; i < lines.length; i++){
+    var t = lines[i].replace(/\r$/, ''); if (!t.trim()) continue;
+    var m = t.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$/);
+    if (!m) continue;
+    var enNo = m[3], name = m[4].trim();
+    var year = +m[7].slice(0,4);
+    var month = +m[7].match(/[\/\-](\d{1,2})[\/\-]/)[1];
+    var day = +m[7].match(/[\/\-](\d{1,2})$/)[1];
+    var hour = +m[8], mins = +m[9];
+    if (!name) continue;
+    var timeMin = hour*60 + mins;
+    out.push({
+      id: enNo.replace(/^0+/,'') || enNo, name: name,
+      date: year + '-' + pad2(month) + '-' + pad2(day),
+      timeMin: timeMin, timeStr: minToHHMM(timeMin)
+    });
+  }
+  return out;
+}
+
+function parseXls(binary){
+  var wb = XLSX.read(binary, { type:'binary', cellDates:true });
+  var sn = wb.SheetNames.indexOf('Logs') !== -1 ? 'Logs' : wb.SheetNames[0];
+  var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header:1, raw:false, defval:'' });
+  var hi = -1;
+  for (var i=0;i<Math.min(rows.length,10);i++)
+    if (rows[i].map(function(c){return String(c).toLowerCase();}).some(function(c){return /eno|datetime/.test(c);})){ hi=i; break; }
+  if (hi===-1) throw new Error('Matrix XLS — upload raw 001_GLog.txt instead.');
+  var hdr = rows[hi].map(function(c){return String(c).trim();});
+  var iEn = hdr.findIndex(function(h){return /eno/i.test(h);});
+  var iName = hdr.findIndex(function(h){return /name/i.test(h);});
+  var iDt = hdr.findIndex(function(h){return /datetime/i.test(h);});
+  var out = [];
+  for (var j=hi+1;j<rows.length;j++){
+    var r = rows[j]; if (!r[iEn]||!r[iDt]) continue;
+    var dt = parseDateTime(String(r[iDt])); if (!dt) continue;
+    var enNo = String(r[iEn]);
+    var timeMin = dt.getHours()*60 + dt.getMinutes();
+    out.push({
+      id: enNo.replace(/^0+/,'') || enNo,
+      name: String(r[iName]||'').trim(),
+      date: fmtDateLocal(dt), timeMin: timeMin, timeStr: minToHHMM(timeMin)
+    });
+  }
+  return out;
+}
+
+function parseDateTime(s){
+  s = String(s).trim();
+  var m = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +(m[6]||0));
+  var d = new Date(s); return isNaN(d)?null:d;
+}
+function fmtDateLocal(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function hhmmToMin(hhmm){ var parts = String(hhmm).split(':'); return (Number(parts[0])||0)*60+(Number(parts[1])||0); }
+function minToHHMM(m){ m = Number(m)||0; return pad2(Math.floor(m/60))+':'+pad2(m%60); }
+function dayName(ds){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(ds+'T00:00:00').getDay()]; }
+function monthName(ym){
+  if (!ym) return '';
+  var parts = ym.split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  var names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return names[m-1]+' '+y;
+}
+function isWorkDay(ds){
+  var dow = new Date(ds+'T00:00:00').getDay();
+  if ((SETTINGS.workDays || '1,2,3,4,5').split(',').map(Number).indexOf(dow) === -1) return false;
+  var month = ds.slice(0,7);
+  if (PERIODS[month] && ds < PERIODS[month]) return false;
+  return true;
+}
+function thisMonday(){
+  var d = new Date(); var dow = d.getDay();
+  var diff = (dow === 0 ? -6 : 1 - dow);
+  d.setDate(d.getDate() + diff);
+  return fmtDateLocal(d);
+}
+function addDays(ds, n){
+  var d = new Date(ds+'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return fmtDateLocal(d);
+}
+
+function buildEmployees(){
+  var emp = {};
+  for (var i = 0; i < RECORDS.length; i++){
+    var r = RECORDS[i];
+    var id = String(r.id);
+    if (!emp[id]) emp[id] = { name: r.name, days: {} };
+    if (!emp[id].days[r.date]) emp[id].days[r.date] = { all: [] };
+    emp[id].days[r.date].all.push(r.timeMin);
+  }
+  Object.values(emp).forEach(function(e){
+    Object.values(e.days).forEach(function(d){
+      d.all.sort(function(a,b){return a-b;});
+      d.ins  = [d.all[0]];
+      d.outs = d.all.length > 1 ? [d.all[d.all.length-1]] : [];
+    });
+  });
+  return emp;
+}
+function visibleEmployees(emp){
+  var out = {};
+  Object.keys(emp).forEach(function(id){
+    if (!HIDDEN.has(String(id))) out[id] = emp[id];
+  });
+  return out;
+}
+
+function renderAll(){
+  var mode = document.getElementById('viewMode').value;
+  ['grid','summary','person','week','leaderboard','patterns','missout','early','absent','late'].forEach(function(m){
+    document.getElementById('view' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('hidden', mode !== m);
+  });
+  document.getElementById('personPickWrap').classList.toggle('hidden', mode !== 'person');
+  document.getElementById('weekPickWrap').classList.toggle('hidden', mode !== 'week');
+  if (mode === 'grid') renderGrid();
+  if (mode === 'summary') renderSummary();
+  if (mode === 'person'){ populateEmpSelect(); renderPerson(); }
+  if (mode === 'week') renderWeek();
+  if (mode === 'leaderboard') renderLeaderboard();
+  if (mode === 'patterns') renderPatterns();
+  if (mode === 'missout') renderMissout();
+  if (mode === 'early') renderEarly();
+  if (mode === 'absent') renderAbsent();
+  if (mode === 'late') renderLate();
+}
+
+function renderGrid(){
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  if (!month){ document.getElementById('gridResult').innerHTML = '<div class="empty">Pick a month.</div>'; return; }
+  document.getElementById('gridTitle').textContent = '📅 ' + monthName(month) + ' — Sign In / Out Grid';
+  var parts = month.split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var workDays = [];
+  for (var d = 1; d <= daysInMonth; d++){
+    var ds = y + '-' + pad2(m) + '-' + pad2(d);
+    if (isWorkDay(ds)) workDays.push(d);
+  }
+  var ids = Object.keys(visible).sort(function(a,b){return visible[a].name.localeCompare(visible[b].name);});
+  if (!ids.length){ document.getElementById('gridResult').innerHTML = '<div class="empty">No employees.</div>'; return; }
+
+  var html = '<div class="table-wrap"><table><thead><tr><th style="min-width:180px;position:sticky;left:0;background:var(--thead);z-index:6">Employee</th>';
+  workDays.forEach(function(d){
+    var ds = y + '-' + pad2(m) + '-' + pad2(d);
+    html += '<th style="text-align:center;min-width:82px">' + dayName(ds).slice(0,3) + '<br>' + pad2(d) + '</th>';
+  });
+  html += '<th style="text-align:center">Late</th><th style="text-align:center">Miss IN</th><th style="text-align:center">Miss OUT</th></tr></thead><tbody>';
+
+  ids.forEach(function(id){
+    var e = visible[id];
+    var late=0, mIn=0, mOut=0;
+    var row = '<tr><td style="position:sticky;left:0;background:var(--card);font-weight:700;color:var(--ink)">' + e.name + '<span class="chip">#' + id + '</span></td>';
+    workDays.forEach(function(d){
+      var ds = y + '-' + pad2(m) + '-' + pad2(d);
+      var day = e.days[ds];
+      if (!day){ row += '<td style="text-align:center;color:var(--faint)">—</td>'; return; }
+      var fIn = day.ins[0], lOut = day.outs.length ? day.outs[0] : null;
+
+      var hdAbsent = false;
+      var hdReason = '';
+      if (SETTINGS.halfdayEnabled === 'yes' && HALFDAY.has(String(id))){
+        var cutoff = SETTINGS.halfdayCutoff || 720;
+        if (fIn != null && fIn >= cutoff){ hdAbsent = true; hdReason = 'Late In'; }
+        if (lOut != null && lOut < cutoff){ hdAbsent = true; hdReason = hdReason ? 'Half Day' : 'Early Out'; }
+      }
+
+      if (hdAbsent){
+        row += '<td style="text-align:center;color:var(--muted);font-style:italic;font-size:11px;line-height:1.5">ABSENT<br>' + hdReason + '</td>';
+        return;
+      }
+
+      if (fIn > SETTINGS.start + SETTINGS.grace) late++;
+      if (lOut === null) mOut++;
+      var cell = '';
+      if (fIn != null){
+        var isLate = fIn > SETTINGS.start + SETTINGS.grace;
+        cell += '<span class="time-cell' + (isLate?' late':'') + '">' + minToHHMM(fIn) + '</span>';
+      } else { mIn++; cell += '<span class="miss">—</span>'; }
+      cell += '<br>';
+      if (lOut != null){
+        var isEarly = lOut < SETTINGS.end;
+        cell += '<span class="time-cell' + (isEarly?' miss':'') + '">' + minToHHMM(lOut) + '</span>';
+      } else cell += '<span class="miss">—</span>';
+      row += '<td style="text-align:center;line-height:1.5">' + cell + '</td>';
+    });
+    row += '<td style="text-align:center" class="' + (late?'late':'ok') + '">' + late + '</td>';
+    row += '<td style="text-align:center" class="' + (mIn?'miss':'ok') + '">' + mIn + '</td>';
+    row += '<td style="text-align:center" class="' + (mOut?'miss':'ok') + '">' + mOut + '</td></tr>';
+    html += row;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('gridResult').innerHTML = html;
+}
+
+function renderSummary(){
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  var stats = computeStats(visible, month);
+  var ids = Object.keys(stats).sort(function(a,b){return stats[a].name.localeCompare(stats[b].name);});
+  if (!ids.length){ document.getElementById('summaryResult').innerHTML = '<div class="empty">No data.</div>'; return; }
+  var html = '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Present</th><th>Absent</th><th>Late</th><th>Miss IN</th><th>Miss OUT</th><th>Early</th><th>Late (min)</th><th>Hours</th></tr></thead><tbody>';
+  ids.forEach(function(id){
+    var s = stats[id];
+    html += '<tr><td>'+id+'</td><td style="font-weight:600">'+s.name+'</td><td class="ok">'+s.daysPresent+'</td><td class="absent">'+s.daysAbsent+'</td><td class="late">'+s.late+'</td><td class="miss">'+s.missingIn+'</td><td class="miss">'+s.missingOut+'</td><td class="late">'+s.earlyLeave+'</td><td>'+s.totalLateMin+'</td><td>'+(s.totalWorkMin/60).toFixed(1)+' h</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('summaryResult').innerHTML = html;
+}
+
+function populateEmpSelect(){
+  var visible = visibleEmployees(buildEmployees());
+  var sel = document.getElementById('empSelect');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">— Select name —</option>';
+  Object.entries(visible).sort(function(a,b){return a[1].name.localeCompare(b[1].name);}).forEach(function(pair){
+    var id = pair[0], e = pair[1];
+    var o = document.createElement('option');
+    o.value = id; o.textContent = e.name + ' (#' + id + ')';
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+function renderPerson(){
+  var id = document.getElementById('empSelect').value;
+  var box = document.getElementById('personResult');
+  var actions = document.getElementById('personActions');
+  if (!id){ box.innerHTML = '<div class="empty">Select an employee above.</div>'; actions.innerHTML = ''; return; }
+  var visible = visibleEmployees(buildEmployees());
+  var e = visible[id];
+  if (!e){ box.innerHTML = '<div class="empty">Not found.</div>'; actions.innerHTML = ''; return; }
+  var month = document.getElementById('monthPick').value;
+  var stub = {}; stub[id] = e;
+  var stats = computeStats(stub, month)[id];
+  box.innerHTML = renderPersonHtml(stats, id, month);
+  if (IS_ADMIN){
+    actions.innerHTML = '<button class="btn" onclick="printPersonReport(\'' + id + '\')">🖨 Print Report</button><button class="btn green" onclick="shareWhatsApp(\'' + id + '\')">📱 Share to WhatsApp</button>';
+  } else actions.innerHTML = '';
+}
+
+function renderPersonHtml(stats, id, month){
+  var html = '<div style="padding:4px 0 8px"><h3 style="font-size:20px;font-weight:800;color:var(--ink);margin:0 0 4px">' + stats.name + '</h3><p style="color:var(--muted);font-size:13px;margin:0">Employee ID #' + id + ' · ' + monthName(month) + '</p></div>';
+  html += '<div class="stat-grid"><div class="stat ok"><div class="n">'+stats.daysPresent+'</div><div class="l">Present</div></div><div class="stat abs"><div class="n">'+stats.daysAbsent+'</div><div class="l">Absent</div></div><div class="stat late"><div class="n">'+stats.late+'</div><div class="l">Late</div></div><div class="stat miss"><div class="n">'+stats.missingIn+'</div><div class="l">Miss IN</div></div><div class="stat miss"><div class="n">'+stats.missingOut+'</div><div class="l">Miss OUT</div></div><div class="stat late"><div class="n">'+stats.totalLateMin+'m</div><div class="l">Late Time</div></div><div class="stat"><div class="n">'+(stats.totalWorkMin/60).toFixed(1)+'h</div><div class="l">Hours</div></div></div>';
+  html += '<h3 style="margin:22px 0 10px">Daily Record</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Day</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr></thead><tbody>';
+  stats.dayDetails.forEach(function(d){
+    var cls = d.status === 'OK' ? 'ok' : (d.status.indexOf('Absent') !== -1) ? 'absent' : (d.status.indexOf('Late') !== -1 || d.status.indexOf('Early') !== -1) ? 'late' : 'miss';
+    html += '<tr><td>'+d.date+'</td><td>'+dayName(d.date)+'</td><td class="time-cell">'+(d.in != null ? minToHHMM(d.in) : '—')+'</td><td class="time-cell">'+(d.out != null ? minToHHMM(d.out) : '—')+'</td><td class="'+cls+'">'+d.status+'</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function computeStats(emp, month){
+  var stats = {};
+  var workDates = workDatesFor(month);
+  if (!workDates) return stats;
+  Object.keys(emp).forEach(function(id){
+    var e = emp[id];
+    var s = { id: id, name: e.name, daysPresent:0, daysAbsent:0, missingIn:0, missingOut:0, late:0, earlyLeave:0, totalLateMin:0, totalWorkMin:0, dayDetails:[] };
+    workDates.forEach(function(date){
+      var day = e.days[date];
+      if (!day){ s.daysAbsent++; s.dayDetails.push({ date: date, status:'Absent', in:null, out:null }); return; }
+      var fIn = day.ins[0], lOut = day.outs.length ? day.outs[0] : null;
+      var issues = [];
+      if (fIn != null){
+        s.daysPresent++;
+        if (fIn > SETTINGS.start + SETTINGS.grace){ s.late++; s.totalLateMin += fIn - SETTINGS.start; issues.push('Late'); }
+      } else { s.missingIn++; issues.push('No IN'); }
+      if (lOut != null){
+        if (lOut < SETTINGS.end){ s.earlyLeave++; issues.push('Early Leave'); }
+      } else { s.missingOut++; issues.push('No OUT'); }
+
+      var hdAbsent = false;
+      var hdReason = '';
+      if (SETTINGS.halfdayEnabled === 'yes' && HALFDAY.has(String(id))){
+        var cutoff = SETTINGS.halfdayCutoff || 720;
+        if (fIn != null && fIn >= cutoff){ hdAbsent = true; hdReason = 'Absent (Late In)'; }
+        if (lOut != null && lOut < cutoff){ hdAbsent = true; hdReason = hdReason ? 'Absent (Half Day)' : 'Absent (Early Out)'; }
+      }
+
+      if (hdAbsent){
+        s.daysPresent--;
+        s.daysAbsent++;
+        s.dayDetails.push({ date: date, status: hdReason, in:fIn, out:lOut });
+        return;
+      }
+
+      if (fIn != null && lOut != null) s.totalWorkMin += (lOut - fIn);
+      s.dayDetails.push({ date: date, status: issues.length ? issues.join(', ') : 'OK', in:fIn, out:lOut });
+    });
+    stats[id] = s;
+  });
+  return stats;
+}
+
+function renderPeriodList(){
+  var el = document.getElementById('periodList');
+  if (!el) return;
+  var keys = Object.keys(PERIODS).sort();
+  if (!keys.length){
+    el.innerHTML = '<span style="color:var(--muted)">No custom periods set. Every month starts on day 1.</span>';
+    return;
+  }
+  var html = '<div class="table-wrap" style="border:none"><table style="background:transparent"><thead><tr><th style="background:var(--soft)">Month</th><th style="background:var(--soft)">Starts On</th><th style="background:var(--soft)"></th></tr></thead><tbody>';
+  keys.forEach(function(k){
+    html += '<tr><td style="font-weight:600">' + k + '</td><td class="time-cell">' + PERIODS[k] + '</td><td><button class="hide-toggle" style="color:var(--bad)" onclick="removePeriod(\'' + k + '\')">🗑 Remove</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function renderHalfDayList(){
+  var el = document.getElementById('halfDayList');
+  if (!el) return;
+  var emp = buildEmployees();
+  var ids = Object.keys(emp).sort(function(a,b){ return emp[a].name.localeCompare(emp[b].name); });
+  if (!ids.length){
+    el.innerHTML = '<em style="color:var(--faint)">No employees loaded. Upload data first.</em>';
+    return;
+  }
+  var html = '';
+  ids.forEach(function(id){
+    var checked = HALFDAY.has(String(id));
+    html += '<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;font-weight:500;text-transform:none;letter-spacing:0;cursor:pointer;margin:2px 0;background:' + (checked?'var(--warnbg)':'transparent') + '">';
+    html += '<input type="checkbox" ' + (checked?'checked':'') + ' onchange="toggleHalfDay(\'' + id + '\')" style="width:auto;margin:0">';
+    html += '<span style="font-weight:600;color:var(--ink)">' + emp[id].name + ' <span class="chip">#' + id + '</span></span>';
+    html += '</label>';
+  });
+  el.innerHTML = html;
+}
+
+function renderHiddenList(){
+  var emp = buildEmployees();
+  var ids = Object.keys(emp).sort(function(a,b){return emp[a].name.localeCompare(emp[b].name);});
+  var el = document.getElementById('hiddenList');
+  if (!ids.length){ el.innerHTML = '<span style="color:var(--muted)">No employees loaded.</span>'; return; }
+  var html = '';
+  ids.forEach(function(id){
+    var hid = HIDDEN.has(String(id));
+    html += '<div style="padding:6px 0;display:flex;justify-content:space-between;align-items:center;max-width:440px;border-bottom:1px solid var(--line)"><span style="font-weight:600">' + emp[id].name + ' <span class="chip">#' + id + '</span></span><button class="hide-toggle" style="color:' + (hid?'var(--ok)':'var(--bad)') + '" onclick="toggleHide(\'' + id + '\')">' + (hid?'✅ Show':'🚫 Hide') + '</button></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderDataSummary(){
+  var el = document.getElementById('dataSummary');
+  if (!RECORDS.length){ el.textContent = 'No data.'; return; }
+  var dates = RECORDS.map(function(r){return r.date;}).sort();
+  var emps = new Set(RECORDS.map(function(r){return r.id;}));
+  var months = new Set(RECORDS.map(function(r){return r.date.slice(0,7);}));
+  el.innerHTML = '<b>' + RECORDS.length + '</b> punches · <b>' + emps.size + '</b> employees · <b>' + dates[0] + '</b> → <b>' + dates[dates.length-1] + '</b> · months: ' + Array.from(months).sort().join(', ');
+}
+
+/* ---------- WEEK VIEW ---------- */
+function shiftWeek(delta){
+  var cur = document.getElementById('weekStart').value || thisMonday();
+  var newDate;
+  if (delta === 0) newDate = thisMonday();
+  else newDate = addDays(cur, delta * 7);
+  document.getElementById('weekStart').value = newDate;
+  renderWeek();
+}
+
+function renderWeek(){
+  if (!IS_ADMIN){ document.getElementById('weekResult').innerHTML = '<div class="empty">Admin only.</div>'; return; }
+  var start = document.getElementById('weekStart').value || thisMonday();
+  var weekDays = [];
+  for (var i = 0; i < 7; i++) weekDays.push(addDays(start, i));
+  var workDays = weekDays.filter(function(ds){ return isWorkDay(ds); });
+  document.getElementById('weekTitle').textContent = '📅 Week of ' + new Date(start+'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  document.getElementById('weekSubtitle').textContent = workDays.length + ' working day' + (workDays.length !== 1 ? 's' : '') + ' this week';
+  var visible = visibleEmployees(buildEmployees());
+  var ids = Object.keys(visible).sort(function(a,b){return visible[a].name.localeCompare(visible[b].name);});
+  if (!ids.length){ document.getElementById('weekResult').innerHTML = '<div class="empty">No employees.</div>'; return; }
+  var html = '<div class="table-wrap"><table><thead><tr><th style="min-width:180px;position:sticky;left:0;background:var(--thead);z-index:6">Employee</th>';
+  weekDays.forEach(function(ds){
+    var isWk = isWorkDay(ds);
+    var bg = isWk ? '' : 'background:var(--soft);color:var(--faint)';
+    html += '<th style="text-align:center;min-width:80px;' + bg + '">' + dayName(ds).slice(0,3) + '<br>' + ds.slice(8) + '</th>';
+  });
+  html += '<th style="text-align:center">Late</th><th style="text-align:center">Present</th></tr></thead><tbody>';
+  ids.forEach(function(id){
+    var e = visible[id];
+    var wkLate = 0, wkPresent = 0;
+    var row = '<tr><td style="position:sticky;left:0;background:var(--card);font-weight:700;color:var(--ink)">' + e.name + '<span class="chip">#' + id + '</span></td>';
+    weekDays.forEach(function(ds){
+      var day = e.days[ds];
+      var isWk = isWorkDay(ds);
+      if (!isWk){ row += '<td style="text-align:center;color:var(--faint);background:var(--soft)">—</td>'; return; }
+      if (!day){ row += '<td style="text-align:center;color:var(--faint)">—</td>'; return; }
+      var fIn = day.ins[0], lOut = day.outs.length ? day.outs[0] : null;
+      var isLate = fIn > SETTINGS.start + SETTINGS.grace;
+      if (isLate) wkLate++;
+      wkPresent++;
+      var cell = '<span class="time-cell' + (isLate?' late':'') + '">' + minToHHMM(fIn) + '</span>';
+      if (lOut != null) cell += '<br><span class="time-cell">' + minToHHMM(lOut) + '</span>';
+      row += '<td style="text-align:center;line-height:1.4">' + cell + '</td>';
+    });
+    row += '<td style="text-align:center" class="' + (wkLate?'late':'ok') + '">' + wkLate + '</td>';
+    row += '<td style="text-align:center" class="ok">' + wkPresent + '</td></tr>';
+    html += row;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('weekResult').innerHTML = html;
+}
+
+/* ---------- LEADERBOARD ---------- */
+function renderLeaderboard(){
+  if (!IS_ADMIN){ document.getElementById('leaderboardResult').innerHTML = '<div class="empty">Admin only.</div>'; return; }
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  var stats = computeStats(visible, month);
+  document.getElementById('leaderboardSubtitle').textContent = 'Based on ' + monthName(month);
+  var arr = Object.values(stats).filter(function(s){ return s.daysPresent > 0; });
+  var mostPunctual = arr.filter(function(s){return s.late === 0;}).sort(function(a,b){ return b.daysPresent - a.daysPresent || a.totalLateMin - b.totalLateMin; }).slice(0, 5);
+  var mostLate = arr.filter(function(s){return s.late > 0;}).sort(function(a,b){ return b.late - a.late || b.totalLateMin - a.totalLateMin; }).slice(0, 5);
+  var mostAbsent = Object.values(stats).filter(function(s){return s.daysAbsent > 0;}).sort(function(a,b){ return b.daysAbsent - a.daysAbsent; }).slice(0, 5);
+  var html = '<div class="rank-list"><div class="rank-col"><h4>🏆 Most Punctual</h4>';
+  if (mostPunctual.length){
+    mostPunctual.forEach(function(s, i){
+      var cls = i===0?'gold':i===1?'silver':i===2?'bronze':'default';
+      html += '<div class="rank-item"><div class="rank-num ' + cls + '">' + (i+1) + '</div><div class="rank-info"><div class="rank-name">' + s.name + '</div><div class="rank-sub">' + s.daysPresent + ' days · 0 late</div></div><div class="rank-value ok">✓</div></div>';
+    });
+  } else html += '<div style="padding:20px;text-align:center;color:var(--faint);font-size:13px">No perfect attendance</div>';
+  html += '</div><div class="rank-col"><h4>⚠️ Most Late</h4>';
+  if (mostLate.length){
+    mostLate.forEach(function(s, i){
+      var cls = i===0?'gold':i===1?'silver':i===2?'bronze':'default';
+      html += '<div class="rank-item"><div class="rank-num ' + cls + '">' + (i+1) + '</div><div class="rank-info"><div class="rank-name">' + s.name + '</div><div class="rank-sub">' + s.late + ' late · ' + s.totalLateMin + ' min</div></div><div class="rank-value late">' + s.late + '</div></div>';
+    });
+  } else html += '<div style="padding:20px;text-align:center;color:var(--faint);font-size:13px">Everyone on time</div>';
+  html += '</div><div class="rank-col" style="grid-column:1/-1"><h4>❌ Most Absences</h4>';
+  if (mostAbsent.length){
+    mostAbsent.forEach(function(s, i){
+      var cls = i===0?'gold':i===1?'silver':i===2?'bronze':'default';
+      html += '<div class="rank-item"><div class="rank-num ' + cls + '">' + (i+1) + '</div><div class="rank-info"><div class="rank-name">' + s.name + '</div><div class="rank-sub">' + s.daysAbsent + ' absent days</div></div><div class="rank-value absent">' + s.daysAbsent + '</div></div>';
+    });
+  } else html += '<div style="padding:20px;text-align:center;color:var(--faint);font-size:13px">No absences</div>';
+  html += '</div></div>';
+  document.getElementById('leaderboardResult').innerHTML = html;
+}
+
+/* ---------- PATTERNS ---------- */
+function renderPatterns(){
+  if (!IS_ADMIN){ document.getElementById('patternsResult').innerHTML = '<div class="empty">Admin only.</div>'; return; }
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  document.getElementById('patternsSubtitle').textContent = 'Detected from ' + monthName(month);
+  var parts = (month || '').split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  if (!y || !m){ document.getElementById('patternsResult').innerHTML = '<div class="empty">Pick a month.</div>'; return; }
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var workDates = [];
+  for (var d = 1; d <= daysInMonth; d++){
+    var ds = y + '-' + pad2(m) + '-' + pad2(d);
+    if (isWorkDay(ds)) workDates.push(ds);
+  }
+  var patterns = [];
+  var dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  Object.keys(visible).forEach(function(id){
+    var e = visible[id];
+    var lateByDow = {}, absentByDow = {};
+    workDates.forEach(function(ds){
+      var dow = new Date(ds+'T00:00:00').getDay();
+      var day = e.days[ds];
+      if (!day){ absentByDow[dow] = (absentByDow[dow] || 0) + 1; return; }
+      var fIn = day.ins[0];
+      if (fIn > SETTINGS.start + SETTINGS.grace) lateByDow[dow] = (lateByDow[dow] || 0) + 1;
+    });
+    Object.keys(lateByDow).forEach(function(dow){
+      var count = lateByDow[dow];
+      var times = workDates.filter(function(ds){ return new Date(ds+'T00:00:00').getDay() === +dow && e.days[ds] && e.days[ds].ins[0] > SETTINGS.start + SETTINGS.grace; }).map(function(ds){return ds.slice(5);}).join(', ');
+      if (count >= 3){
+        patterns.push({ severity: 'high', name: e.name, id: id, title: 'Always late on ' + dowNames[dow] + 's', desc: e.name + ' was late ' + count + ' times on ' + dowNames[dow] + 's.', detail: 'Times: ' + times });
+      } else if (count >= 2){
+        patterns.push({ severity: 'med', name: e.name, id: id, title: 'Often late on ' + dowNames[dow] + 's', desc: e.name + ' was late ' + count + ' times on ' + dowNames[dow] + 's.', detail: 'Times: ' + times });
+      }
+    });
+    Object.keys(absentByDow).forEach(function(dow){
+      var count = absentByDow[dow];
+      if (count >= 2){
+        var dates = workDates.filter(function(ds){ return new Date(ds+'T00:00:00').getDay() === +dow && !e.days[ds]; }).map(function(ds){return ds.slice(5);}).join(', ');
+        patterns.push({ severity: 'med', name: e.name, id: id, title: 'Frequently absent on ' + dowNames[dow] + 's', desc: e.name + ' was absent ' + count + ' times on ' + dowNames[dow] + 's.', detail: 'Dates: ' + dates });
+      }
+    });
+  });
+  var sevOrder = { high: 0, med: 1, info: 2 };
+  patterns.sort(function(a,b){ return sevOrder[a.severity] - sevOrder[b.severity] || a.name.localeCompare(b.name); });
+  if (!patterns.length){
+    document.getElementById('patternsResult').innerHTML = '<div class="empty" style="padding:40px 20px"><strong style="color:var(--ok);font-size:15px">🎉 No patterns detected</strong><p style="font-size:13px;color:var(--muted);margin:8px 0 0">All staff showed consistent attendance this month.</p></div>';
+    return;
+  }
+  var html = '';
+  patterns.forEach(function(p){
+    html += '<div class="pattern-card sev-' + p.severity + '"><div class="pattern-head"><div class="pattern-name">' + p.name + ' <span class="chip">#' + p.id + '</span></div><span class="pattern-badge sev-' + p.severity + '">' + (p.severity === 'high' ? 'High' : p.severity === 'med' ? 'Watch' : 'Info') + '</span></div><div class="pattern-desc"><strong>' + p.title + '.</strong> ' + p.desc + '</div><div class="pattern-detail">' + p.detail + '</div></div>';
+  });
+  document.getElementById('patternsResult').innerHTML = html;
+}
+
+/* ---------- MISSING CLOCK-OUT ---------- */
+function renderMissout(){
+  if (!IS_ADMIN){ document.getElementById('missoutResult').innerHTML = '<div class="empty">Admin only.</div>'; return; }
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  document.getElementById('missoutSubtitle').textContent = 'Report for ' + monthName(month);
+  var parts = (month || '').split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  if (!y || !m){ document.getElementById('missoutResult').innerHTML = '<div class="empty">Pick a month.</div>'; return; }
+  var missing = [];
+  var okCount = 0;
+  var affectedStaff = {};
+  Object.keys(visible).forEach(function(id){
+    var e = visible[id];
+    Object.keys(e.days).sort().forEach(function(date){
+      if (date.slice(0,7) !== month) return;
+      if (!isWorkDay(date)) return;
+      var day = e.days[date];
+      var fIn = day.ins[0];
+      var lOut = day.outs.length ? day.outs[0] : null;
+      var halfDaySkip = false;
+      if (SETTINGS.halfdayEnabled === 'yes' && HALFDAY.has(String(id))){
+        var cutoff = SETTINGS.halfdayCutoff || 720;
+        if (fIn != null && fIn >= cutoff) halfDaySkip = true;
+      }
+      if (!halfDaySkip && fIn != null && lOut == null){
+        missing.push({ id: id, name: e.name, date: date, inMin: fIn });
+        affectedStaff[id] = (affectedStaff[id] || 0) + 1;
+      } else if (fIn != null && lOut != null){ okCount++; }
+    });
+  });
+  missing.sort(function(a, b){ return a.date.localeCompare(b.date) || a.name.localeCompare(b.name); });
+  var summaryHtml = '<div class="stat-grid" style="margin-bottom:20px">';
+  summaryHtml += '<div class="stat miss"><div class="n">' + missing.length + '</div><div class="l">Missing Clock-Outs</div></div>';
+  summaryHtml += '<div class="stat ok"><div class="n">' + okCount + '</div><div class="l">Complete Days</div></div>';
+  summaryHtml += '<div class="stat abs"><div class="n">' + Object.keys(affectedStaff).length + '</div><div class="l">Affected Staff</div></div>';
+  summaryHtml += '</div>';
+  var detailHtml = '';
+  if (missing.length){
+    detailHtml = '<h3 style="margin:24px 0 10px">📋 Detailed List (' + missing.length + ' records)</h3>';
+    detailHtml += '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Day</th><th>Employee</th><th>Clocked In</th><th>Clocked Out</th><th>Status</th></tr></thead><tbody>';
+    missing.forEach(function(mm){
+      detailHtml += '<tr><td>' + mm.date + '</td><td>' + dayName(mm.date) + '</td><td style="font-weight:600">' + mm.name + '<span class="chip">#' + mm.id + '</span></td><td class="time-cell">' + minToHHMM(mm.inMin) + '</td><td class="time-cell miss">—</td><td><span class="miss">🚪 Missing OUT</span></td></tr>';
+    });
+    detailHtml += '</tbody></table></div>';
+  } else {
+    detailHtml = '<div class="empty" style="padding:40px 20px"><strong style="color:var(--ok);font-size:15px">🎉 No missing clock-outs</strong><p style="font-size:13px;color:var(--muted);margin:8px 0 0">Everyone clocked out properly this month.</p></div>';
+  }
+  document.getElementById('missoutResult').innerHTML = summaryHtml + detailHtml;
+}
+
+/* ---------- EARLY CLOCK-OUT ---------- */
+function renderEarly(){
+  if (!IS_ADMIN){ document.getElementById('earlyResult').innerHTML = '<div class="empty">Admin only.</div>'; return; }
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  document.getElementById('earlySubtitle').textContent = 'Report for ' + monthName(month);
+  var parts = (month || '').split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  if (!y || !m){ document.getElementById('earlyResult').innerHTML = '<div class="empty">Pick a month.</div>'; return; }
+  var early = [];
+  var okCount = 0;
+  Object.keys(visible).forEach(function(id){
+    var e = visible[id];
+    Object.keys(e.days).sort().forEach(function(date){
+      if (date.slice(0,7) !== month) return;
+      if (!isWorkDay(date)) return;
+      var day = e.days[date];
+      var fIn = day.ins[0];
+      var lOut = day.outs.length ? day.outs[0] : null;
+      var halfDaySkip = false;
+      if (SETTINGS.halfdayEnabled === 'yes' && HALFDAY.has(String(id))){
+        var cutoff = SETTINGS.halfdayCutoff || 720;
+        if (lOut != null && lOut < cutoff) halfDaySkip = true;
+      }
+      if (!halfDaySkip && fIn != null && lOut != null && lOut < SETTINGS.end){
+        early.push({ id: id, name: e.name, date: date, inMin: fIn, outMin: lOut, early: SETTINGS.end - lOut });
+      } else if (fIn != null && lOut != null){ okCount++; }
+    });
+  });
+  early.sort(function(a, b){ return a.date.localeCompare(b.date) || a.name.localeCompare(b.name); });
+  var summaryHtml = '<div class="stat-grid" style="margin-bottom:20px">';
+  summaryHtml += '<div class="stat late"><div class="n">' + early.length + '</div><div class="l">Early Clock-Outs</div></div>';
+  summaryHtml += '<div class="stat ok"><div class="n">' + okCount + '</div><div class="l">Complete Days</div></div>';
+  summaryHtml += '</div>';
+  var detailHtml = '';
+  if (early.length){
+    detailHtml = '<h3 style="margin:24px 0 10px">📋 Detailed List (' + early.length + ' records)</h3>';
+    detailHtml += '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Day</th><th>Employee</th><th>Clocked In</th><th>Clocked Out</th><th>Early By</th></tr></thead><tbody>';
+    early.forEach(function(x){
+      detailHtml += '<tr><td>' + x.date + '</td><td>' + dayName(x.date) + '</td><td style="font-weight:600">' + x.name + '<span class="chip">#' + x.id + '</span></td><td class="time-cell">' + minToHHMM(x.inMin) + '</td><td class="time-cell late">' + minToHHMM(x.outMin) + '</td><td><span class="late">🏃 ' + x.early + ' min</span></td></tr>';
+    });
+    detailHtml += '</tbody></table></div>';
+  } else {
+    detailHtml = '<div class="empty" style="padding:40px 20px"><strong style="color:var(--ok);font-size:15px">🎉 No early clock-outs</strong><p style="font-size:13px;color:var(--muted);margin:8px 0 0">Everyone stayed until work end.</p></div>';
+  }
+  document.getElementById('earlyResult').innerHTML = summaryHtml + detailHtml;
+}
+
+/* ---------- ABSENT REPORT ---------- */
+function renderAbsent(){
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  document.getElementById('absentSubtitle').textContent = 'Report for ' + monthName(month);
+  var parts = (month || '').split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  if (!y || !m){ document.getElementById('absentResult').innerHTML = '<div class="empty">Pick a month.</div>'; return; }
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var workDates = [];
+  for (var d = 1; d <= daysInMonth; d++){
+    var ds = y + '-' + pad2(m) + '-' + pad2(d);
+    if (isWorkDay(ds)) workDates.push(ds);
+  }
+  var absences = [];
+  var affectedStaff = {};
+  Object.keys(visible).forEach(function(id){
+    var e = visible[id];
+    workDates.forEach(function(date){
+      var day = e.days[date];
+      var fIn = day ? day.ins[0] : null;
+      var lOut = day && day.outs.length ? day.outs[0] : null;
+      var reason = '';
+      if (!day) reason = 'No Show';
+      else if (SETTINGS.halfdayEnabled === 'yes' && HALFDAY.has(String(id))){
+        var cutoff = SETTINGS.halfdayCutoff || 720;
+        if (fIn != null && fIn >= cutoff) reason = 'Late In';
+        if (lOut != null && lOut < cutoff) reason = reason ? 'Half Day' : 'Early Out';
+      }
+      if (reason){
+        absences.push({ id: id, name: e.name, date: date, reason: reason, inMin: fIn, outMin: lOut });
+        affectedStaff[id] = (affectedStaff[id] || 0) + 1;
+      }
+    });
+  });
+  absences.sort(function(a, b){ return a.date.localeCompare(b.date) || a.name.localeCompare(b.name); });
+  var summaryHtml = '<div class="stat-grid" style="margin-bottom:20px">';
+  summaryHtml += '<div class="stat miss"><div class="n">' + absences.length + '</div><div class="l">Total Absences</div></div>';
+  summaryHtml += '<div class="stat abs"><div class="n">' + Object.keys(affectedStaff).length + '</div><div class="l">Affected Staff</div></div>';
+  summaryHtml += '<div class="stat"><div class="n">' + workDates.length + '</div><div class="l">Working Days</div></div>';
+  summaryHtml += '<div class="stat abs"><div class="n">' + Object.keys(visible).length + '</div><div class="l">Total Staff</div></div>';
+  summaryHtml += '</div>';
+  var detailHtml = '';
+  if (absences.length){
+    detailHtml = '<h3 style="margin:24px 0 10px">📋 Detailed List (' + absences.length + ' records)</h3>';
+    detailHtml += '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Day</th><th>Employee</th><th>Reason</th><th>Clocked In</th><th>Clocked Out</th></tr></thead><tbody>';
+    absences.forEach(function(x){
+      detailHtml += '<tr><td>' + x.date + '</td><td>' + dayName(x.date) + '</td><td style="font-weight:600">' + x.name + '<span class="chip">#' + x.id + '</span></td><td><span class="miss">❌ ' + x.reason + '</span></td><td class="time-cell">' + (x.inMin != null ? minToHHMM(x.inMin) : '—') + '</td><td class="time-cell">' + (x.outMin != null ? minToHHMM(x.outMin) : '—') + '</td></tr>';
+    });
+    detailHtml += '</tbody></table></div>';
+  } else {
+    detailHtml = '<div class="empty" style="padding:40px 20px"><strong style="color:var(--ok);font-size:15px">🎉 No absences</strong><p style="font-size:13px;color:var(--muted);margin:8px 0 0">Perfect attendance this month.</p></div>';
+  }
+  document.getElementById('absentResult').innerHTML = summaryHtml + detailHtml;
+}
+
+/* ---------- LATE REPORT ---------- */
+function renderLate(){
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  document.getElementById('lateSubtitle').textContent = 'Report for ' + monthName(month);
+  var parts = (month || '').split('-'), y = Number(parts[0]), m = Number(parts[1]);
+  if (!y || !m){ document.getElementById('lateResult').innerHTML = '<div class="empty">Pick a month.</div>'; return; }
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var workDates = [];
+  for (var d = 1; d <= daysInMonth; d++){
+    var ds = y + '-' + pad2(m) + '-' + pad2(d);
+    if (isWorkDay(ds)) workDates.push(ds);
+  }
+  var lateList = [];
+  var affectedStaff = {};
+  var lateThreshold = SETTINGS.start + SETTINGS.grace;
+  Object.keys(visible).forEach(function(id){
+    var e = visible[id];
+    workDates.forEach(function(date){
+      var day = e.days[date];
+      if (!day) return;
+      var fIn = day.ins[0];
+      if (fIn != null && fIn > lateThreshold){
+        var minsLate = fIn - SETTINGS.start;
+        lateList.push({ id: id, name: e.name, date: date, inMin: fIn, minsLate: minsLate });
+        affectedStaff[id] = (affectedStaff[id] || 0) + 1;
+      }
+    });
+  });
+  lateList.sort(function(a, b){ return a.date.localeCompare(b.date) || a.name.localeCompare(b.name); });
+  var totalLateMin = lateList.reduce(function(s, x){ return s + x.minsLate; }, 0);
+  var summaryHtml = '<div class="stat-grid" style="margin-bottom:20px">';
+  summaryHtml += '<div class="stat late"><div class="n">' + lateList.length + '</div><div class="l">Late Arrivals</div></div>';
+  summaryHtml += '<div class="stat abs"><div class="n">' + Object.keys(affectedStaff).length + '</div><div class="l">Affected Staff</div></div>';
+  summaryHtml += '<div class="stat late"><div class="n">' + totalLateMin + 'm</div><div class="l">Total Late Time</div></div>';
+  summaryHtml += '<div class="stat"><div class="n">' + minToHHMM(lateThreshold) + '</div><div class="l">On-Time By</div></div>';
+  summaryHtml += '</div>';
+  var detailHtml = '';
+  if (lateList.length){
+    detailHtml = '<h3 style="margin:24px 0 10px">📋 Detailed List (' + lateList.length + ' records)</h3>';
+    detailHtml += '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Day</th><th>Employee</th><th>Should Be</th><th>Actually</th><th>Minutes Late</th></tr></thead><tbody>';
+    lateList.forEach(function(x){
+      detailHtml += '<tr><td>' + x.date + '</td><td>' + dayName(x.date) + '</td><td style="font-weight:600">' + x.name + '<span class="chip">#' + x.id + '</span></td><td class="time-cell">' + minToHHMM(lateThreshold) + '</td><td class="time-cell late">' + minToHHMM(x.inMin) + '</td><td><span class="late">⏰ ' + x.minsLate + ' min late</span></td></tr>';
+    });
+    detailHtml += '</tbody></table></div>';
+  } else {
+    detailHtml = '<div class="empty" style="padding:40px 20px"><strong style="color:var(--ok);font-size:15px">🎉 No late arrivals</strong><p style="font-size:13px;color:var(--muted);margin:8px 0 0">Everyone arrived on time this month.</p></div>';
+  }
+  document.getElementById('lateResult').innerHTML = summaryHtml + detailHtml;
+}
+
+/* ---------- EXPORT ---------- */
+function exportCSV(){
+  var visible = visibleEmployees(buildEmployees());
+  var month = document.getElementById('monthPick').value;
+  var stats = computeStats(visible, month);
+  var rows = [['ID','Name','Present','Absent','Late','Miss IN','Miss OUT','Early','Late (min)','Hours']];
+  Object.values(stats).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(s){
+    rows.push([s.id,s.name,s.daysPresent,s.daysAbsent,s.late,s.missingIn,s.missingOut,s.earlyLeave,s.totalLateMin,(s.totalWorkMin/60).toFixed(2)]);
+  });
+  var csv = rows.map(function(r){ return r.map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'GTMC_attendance_' + month + '.csv';
+  a.click();
+}
+
+/* ---------- PRINT ---------- */
+function printPersonReport(id){
+  var visible = visibleEmployees(buildEmployees());
+  var e = visible[id];
+  if (!e) return alert('Employee not found');
+  var month = document.getElementById('monthPick').value;
+  var stub = {}; stub[id] = e;
+  var stats = computeStats(stub, month)[id];
+  var w = window.open('', '_blank');
+  if (!w) return alert('Allow pop-ups.');
+  var rows = stats.dayDetails.map(function(d){
+    var cls = d.status === 'OK' ? '#059669' : d.status.indexOf('Absent') !== -1 ? '#64748b' : (d.status.indexOf('Late') !== -1 || d.status.indexOf('Early') !== -1) ? '#dc2626' : '#d97706';
+    return '<tr><td>'+d.date+'</td><td>'+dayName(d.date)+'</td><td>'+(d.in!=null?minToHHMM(d.in):'—')+'</td><td>'+(d.out!=null?minToHHMM(d.out):'—')+'</td><td style="color:'+cls+';font-weight:700">'+d.status+'</td></tr>';
+  }).join('');
+  w.document.write('<!DOCTYPE html><html><head><title>' + stats.name + ' — ' + monthName(month) + '</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#0f172a;max-width:900px;margin:0 auto}.head{display:flex;justify-content:space-between;border-bottom:3px solid #0f2c56;padding-bottom:14px;margin-bottom:22px}.logo{width:52px;height:52px;border-radius:12px;background:#0f2c56;color:#fff;font-family:Georgia;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center}.brand{display:flex;align-items:center;gap:14px}.brand h1{margin:0;font-size:20px;color:#0f2c56}.person{margin:22px 0}.person strong{font-size:22px;color:#0f2c56;display:block}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.stat{background:#f8fafc;border-left:4px solid #2563eb;padding:12px 14px}.stat .n{font-size:22px;font-weight:800;color:#0f2c56}.stat .l{font-size:10px;color:#64748b;text-transform:uppercase;font-weight:700}table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px}th{background:#eef3f8;padding:8px;text-align:left;font-size:11px;text-transform:uppercase;color:#0f2c56}td{padding:7px 8px;border-bottom:1px solid #eef2f7}.foot{margin-top:28px;padding-top:14px;border-top:1px solid #e5eaf1;font-size:11px;color:#64748b;text-align:center}</style></head><body><div class="head"><div class="brand"><div class="logo">G</div><div><h1>GTMC</h1><p style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:600">Attendance Report</p></div></div><div style="text-align:right;font-size:12px;color:#64748b"><strong style="color:#0f2c56;font-size:14px">' + monthName(month) + '</strong><br>Generated: ' + new Date().toLocaleDateString() + '</div></div><div class="person"><strong>' + stats.name + '</strong>Employee ID #' + id + '</div><div class="stats"><div class="stat"><div class="n">'+stats.daysPresent+'</div><div class="l">Present</div></div><div class="stat"><div class="n">'+stats.daysAbsent+'</div><div class="l">Absent</div></div><div class="stat"><div class="n">'+stats.late+'</div><div class="l">Late</div></div><div class="stat"><div class="n">'+stats.totalLateMin+'m</div><div class="l">Late Min</div></div><div class="stat"><div class="n">'+stats.missingIn+'</div><div class="l">Miss IN</div></div><div class="stat"><div class="n">'+stats.missingOut+'</div><div class="l">Miss OUT</div></div><div class="stat"><div class="n">'+stats.earlyLeave+'</div><div class="l">Early</div></div><div class="stat"><div class="n">'+(stats.totalWorkMin/60).toFixed(1)+'h</div><div class="l">Hours</div></div></div><h3 style="color:#0f2c56">Daily Record</h3><table><thead><tr><th>Date</th><th>Day</th><th>In</th><th>Out</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table><div class="foot">© '+new Date().getFullYear()+' GTMC · Crafted by Veehicee</div><script>setTimeout(function(){window.print();},400);<\/script></body></html>');
+  w.document.close();
+}
+
+function shareWhatsApp(id){
+  var visible = visibleEmployees(buildEmployees());
+  var e = visible[id];
+  if (!e) return;
+  var month = document.getElementById('monthPick').value;
+  var stub = {}; stub[id] = e;
+  var stats = computeStats(stub, month)[id];
+  var msg = '*GTMC Attendance Report*\n*' + stats.name + '* (ID #' + id + ')\nMonth: ' + monthName(month) + '\n';
+  msg += 'Present: ' + stats.daysPresent + '\nAbsent: ' + stats.daysAbsent + '\nLate: ' + stats.late + '\nMiss IN: ' + stats.missingIn + '\nMiss OUT: ' + stats.missingOut + '\nEarly: ' + stats.earlyLeave + '\nTotal Hours: ' + (stats.totalWorkMin/60).toFixed(1) + 'h';
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+</script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},vm=$('viewMode');
+var SUMCUSTOM=false,PRESET='month',SORT={k:'name',d:1};
+var PRESETS=[['month','Selected month'],['prev','Previous month'],['3','Last 3 months'],['6','Last 6 months'],['all','All data']];
+function toast(m){var e=document.createElement('div');e.className='toast';e.textContent=String(m);document.body.appendChild(e);setTimeout(function(){e.classList.add('out');setTimeout(function(){e.remove()},300)},3200)}
+window.alert=toast;
+window.toggleTheme=function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('att_theme',t)}catch(e){}};
+Array.prototype.forEach.call(vm.options,function(o){var b=document.createElement('button');b.className='tab'+(o.className?' '+o.className:'');b.dataset.v=o.value;b.textContent=o.textContent;b.onclick=function(){vm.value=o.value;renderAll()};$('tabs').appendChild(b)});
+function lastDay(ym){var p=ym.split('-');return fmtDateLocal(new Date(+p[0],+p[1],0))}
+function shiftYM(ym,n){var p=ym.split('-'),d=new Date(+p[0],+p[1]-1+n,1);return d.getFullYear()+'-'+pad2(d.getMonth()+1)}
+window.workDatesFor=function(x){var f,t;if(typeof x==='string'){if(!/^\d{4}-\d{2}$/.test(x))return null;f=x+'-01';t=lastDay(x)}else{f=x.from;t=x.to;if(!f||!t)return null;if(f>t){var z=f;f=t;t=z}}
+ var out=[],ds=f,n=0;while(ds<=t&&n++<800){if(isWorkDay(ds))out.push(ds);ds=addDays(ds,1)}return out};
+function syncRange(){var m=$('monthPick').value;if(!m)return;$('sumFrom').value=m+'-01';$('sumTo').value=lastDay(m)}
+window.monthChanged=function(){SUMCUSTOM=false;PRESET='month';renderAll()};
+window.stepMonth=function(n){var v=$('monthPick').value;if(!v)return;$('monthPick').value=shiftYM(v,n);monthChanged()};
+window.rangeChanged=function(){SUMCUSTOM=true;PRESET='custom';renderAll()};
+window.setPreset=function(p){var m=$('monthPick').value;if(!m)return;var f,t=lastDay(m);
+ if(p==='month'){SUMCUSTOM=false;PRESET='month';renderAll();return}
+ if(p==='prev'){var pm=shiftYM(m,-1);f=pm+'-01';t=lastDay(pm)}
+ else if(p==='all'){var ds=RECORDS.map(function(r){return r.date}).sort();if(!ds.length)return;f=ds[0];t=ds[ds.length-1]}
+ else f=shiftYM(m,1-(+p))+'-01';
+ SUMCUSTOM=true;PRESET=p;$('sumFrom').value=f;$('sumTo').value=t;renderAll()};
+function sumData(){var f=$('sumFrom').value,t=$('sumTo').value;if(!f||!t)return null;if(f>t){var z=f;f=t;t=z}
+ var arr=Object.values(computeStats(visibleEmployees(buildEmployees()),{from:f,to:t}));
+ arr.forEach(function(s){s.rate=s.dayDetails.length?Math.round(s.daysPresent/s.dayDetails.length*100):0;s.hrs=s.totalWorkMin/60});return {arr:arr,f:f,t:t}}
+function sumRows(d){var r=[['ID','Name','Present','Absent','Rate %','Late','Miss IN','Miss OUT','Early','Late (min)','Hours']];
+ d.arr.sort(function(a,b){return a.name.localeCompare(b.name)}).forEach(function(s){r.push([s.id,s.name,s.daysPresent,s.daysAbsent,s.rate,s.late,s.missingIn,s.missingOut,s.earlyLeave,s.totalLateMin,+s.hrs.toFixed(2)])});return r}
+window.renderSummary=function(){
+ $('presets').innerHTML=PRESETS.map(function(p){return '<button class="chip-btn'+(PRESET===p[0]?' on':'')+'" onclick="setPreset(\''+p[0]+'\')">'+p[1]+'</button>'}).join('');
+ var box=$('summaryResult'),d=sumData();if(!d){box.innerHTML='<div class="empty">Choose a date range.</div>';return}
+ var arr=d.arr,wd=(workDatesFor({from:d.f,to:d.t})||[]).length;
+ $('sumSub').textContent=d.f+'  →  '+d.t+' · '+wd+' working days · '+arr.length+' staff';
+ if(!arr.length){box.innerHTML='<div class="empty">No data for this range.</div>';return}
+ var T={p:0,a:0,l:0,mi:0,mo:0,e:0,lm:0,h:0};arr.forEach(function(s){T.p+=s.daysPresent;T.a+=s.daysAbsent;T.l+=s.late;T.mi+=s.missingIn;T.mo+=s.missingOut;T.e+=s.earlyLeave;T.lm+=s.totalLateMin;T.h+=s.hrs});
+ var rate=T.p+T.a?Math.round(T.p/(T.p+T.a)*100):0;
+ arr.sort(function(a,b){var x=a[SORT.k],y=b[SORT.k];return (typeof x==='string'?x.localeCompare(y):x-y)*SORT.d});
+ var cols=[['name','Employee'],['daysPresent','Present'],['daysAbsent','Absent'],['rate','Attendance'],['late','Late'],['missingIn','Miss IN'],['missingOut','Miss OUT'],['earlyLeave','Early'],['totalLateMin','Late (min)'],['hrs','Hours']];
+ var h='<div class="stat-grid"><div class="stat ok"><div class="n">'+rate+'%</div><div class="l">Attendance rate</div></div><div class="stat"><div class="n">'+wd+'</div><div class="l">Working days</div></div><div class="stat late"><div class="n">'+T.l+'</div><div class="l">Late arrivals</div></div><div class="stat abs"><div class="n">'+T.a+'</div><div class="l">Absences</div></div><div class="stat miss"><div class="n">'+T.mo+'</div><div class="l">Missing clock-outs</div></div><div class="stat"><div class="n">'+T.h.toFixed(0)+'h</div><div class="l">Total hours</div></div></div>';
+ h+='<div class="table-wrap"><table><thead><tr>'+cols.map(function(c){return '<th data-k="'+c[0]+'" onclick="sortSum(\''+c[0]+'\')">'+c[1]+(SORT.k===c[0]?(SORT.d>0?' ▲':' ▼'):'')+'</th>'}).join('')+'</tr></thead><tbody>';
+ arr.forEach(function(s){var c=s.rate>=90?'':s.rate>=75?'m':'l';
+  h+='<tr class="clk" data-id="'+s.id+'"><td style="font-weight:700;color:var(--ink)">'+s.name+'<span class="chip">#'+s.id+'</span></td><td class="ok">'+s.daysPresent+'</td><td class="absent">'+s.daysAbsent+'</td><td><div class="rate"><u><i class="'+c+'" style="width:'+s.rate+'%"></i></u><b>'+s.rate+'%</b></div></td><td class="late">'+s.late+'</td><td class="miss">'+s.missingIn+'</td><td class="miss">'+s.missingOut+'</td><td class="late">'+s.earlyLeave+'</td><td>'+s.totalLateMin+'</td><td>'+s.hrs.toFixed(1)+' h</td></tr>'});
+ h+='</tbody><tfoot><tr><td>Total · '+arr.length+' staff</td><td>'+T.p+'</td><td>'+T.a+'</td><td>'+rate+'%</td><td>'+T.l+'</td><td>'+T.mi+'</td><td>'+T.mo+'</td><td>'+T.e+'</td><td>'+T.lm+'</td><td>'+T.h.toFixed(1)+' h</td></tr></tfoot></table></div><p class="subtitle noprint" style="margin-top:8px">Tip: click a column to sort · click a row to open that person’s record.</p>';
+ box.innerHTML=h};
+window.sortSum=function(k){SORT.d=SORT.k===k?-SORT.d:1;SORT.k=k;renderSummary();applySearch()};
+$('summaryResult').addEventListener('click',function(e){var tr=e.target.closest('tr[data-id]');if(tr){vm.value='person';renderAll();$('empSelect').value=tr.dataset.id;renderPerson();window.scrollTo({top:0,behavior:'smooth'})}});
+function dl(blobParts,type,name){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(blobParts,{type:type}));a.download=name;a.click()}
+window.exportCSV=function(){var d=sumData();if(!d)return alert('Pick a date range first.');
+ dl([sumRows(d).map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"'}).join(',')}).join('\n')],'text/csv','GTMC_attendance_'+d.f+'_to_'+d.t+'.csv')};
+window.exportXLSX=function(){var d=sumData();if(!d)return alert('Pick a date range first.');if(typeof XLSX==='undefined')return alert('Excel library not loaded — use CSV.');
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows(d)),'Summary');XLSX.writeFile(wb,'GTMC_attendance_'+d.f+'_to_'+d.t+'.xlsx')};
+function kpis(){var m=$('monthPick').value,box=$('kpis');if(!m||!RECORDS.length){box.innerHTML='';return}
+ var st=Object.values(computeStats(visibleEmployees(buildEmployees()),m)),p=0,a=0,l=0,mo=0;st.forEach(function(s){p+=s.daysPresent;a+=s.daysAbsent;l+=s.late;mo+=s.missingOut});
+ box.innerHTML=[['👥 Staff',st.length],['✅ Attendance',(p+a?Math.round(p/(p+a)*100):0)+'%'],['⏰ Late',l],['❌ Absences',a],['🚪 No clock-out',mo]].map(function(k){return '<div class="kpi"><span>'+k[0]+'</span><b>'+k[1]+'</b></div>'}).join('')}
+window.applySearch=function(){var q=$('q').value.trim().toLowerCase();document.querySelectorAll('.card:not(.hidden):not(#adminCard) tbody tr,.card:not(.hidden) .rank-item,.card:not(.hidden) .pattern-card').forEach(function(r){r.style.display=(!q||r.textContent.toLowerCase().indexOf(q)>-1)?'':'none'})};
+var _ra=window.renderAll;
+window.renderAll=function(){if(!SUMCUSTOM)syncRange();_ra();
+ document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.dataset.v===vm.value)});
+ $('ctxRow').classList.toggle('hidden',vm.value!=='person'&&vm.value!=='week');kpis();applySearch()};
+window.adminTab=function(k){document.querySelectorAll('.atab').forEach(function(b){b.classList.toggle('on',b.dataset.a===k)});document.querySelectorAll('.apane').forEach(function(p){p.classList.toggle('hidden',p.id!=='ap-'+k)})};
+var dz=$('drop'),fi=$('fileInput');function fn(){var f=fi.files[0];$('fileName').textContent=f?'📄 '+f.name+' · '+Math.round(f.size/1024)+' KB':'Drop 001_GLog.txt here or click to browse'}
+fi.addEventListener('change',fn);['dragover','dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.toggle('over',ev==='dragover');if(ev==='drop'&&e.dataTransfer.files.length){fi.files=e.dataTransfer.files;fn()}})});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLogin();if(e.key==='/'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('q').focus()}});
+})();
+</script>
+</body>
+</html>
